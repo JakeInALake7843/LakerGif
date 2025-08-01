@@ -1,8 +1,8 @@
 [package]
 name = "lakergif"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "A desktop application for editing and creating GIFs, built with Tauri and Rust."
+authors = ["jakeInALake_", "IHaveAName2653"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
