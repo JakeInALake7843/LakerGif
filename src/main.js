@@ -1,3 +1,7 @@
+import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { convertFileSrc } from "@tauri-apps/api/core";
+
 const InputField = document.getElementById("ImageInput");
 const PreviewImage = document.getElementById("PreviewImage");
 const ProcessButton = document.getElementById("Process");
@@ -7,6 +11,7 @@ const OutputImage = document.getElementById("OutputImage");
 const stage = Jcrop.attach("PreviewImage");
 
 InputField.addEventListener("drop", (e) => {
+	console.log(e);
 	e.preventDefault();
 	const reader = new FileReader();
 	reader.readAsDataURL(e.dataTransfer.files[0]);
@@ -35,3 +40,11 @@ ProcessButton.onclick = (ev) => {
 	const output = Canvas.toDataURL("image/png");
 	OutputImage.src = output;
 };
+
+await getCurrentWebview().onDragDropEvent(async (event) => {
+	if (event.payload.type === "drop") {
+		const filepath = event.payload.paths[0];
+		const newImage = convertFileSrc(filepath);
+		PreviewImage.src = newImage.src;
+	}
+});
