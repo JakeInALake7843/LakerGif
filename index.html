@@ -1,34 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload Interface</title>
-    <link rel="stylesheet" href="src/styles.css">
-</head>
-<body>
-    <div class="main-title">Upload, paste, or drag and drop a file here:</div>
-    
-    <div class="container-nofile" id="dropZone">
-        <button class="browse-button" onclick="document.getElementById('fileInput').click()">
-            Browse
-        </button>
-        <p class="no-file-text">No file selected.</p>
-        <input type="file" id="fileInput" class="hidden-input" accept="*/*">
-    </div>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="stylesheet" href="/src/styles.css" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Tauri App</title>
+		<script type="module" src="/src/main.js" defer></script>
+		<link rel="stylesheet" href="https://unpkg.com/jcrop/dist/jcrop.css" />
+		<script src="https://unpkg.com/jcrop"></script>
+	</head>
 
-    <div class="url-section">
-        <label class="url-label" for="urlInput">Or enter direct URL:</label>
-        <input type="url" id="urlInput" class="url-input" placeholder="https://" value="">
-    </div>
+	<body>
+		<h1>LkGIF</h1>
+		<div class="container-nofile">
+			<p>Upload, paste, or drag and drop a file here:</p>
 
-    <button class="import-button" onclick="importFile()">
-        <svg class="import-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-        </svg>
-        Import file!
-    </button>
-
-    <script src="script.js"></script>
-</body>
+			<input type="file" id="ImageInput" accept="image/*" />
+			<img id="PreviewImage" />
+			<button id="Process">do</button>
+			<canvas style="display: none" id="Canvas"></canvas>
+			<br />
+			<img id="OutputImage" />
+		</div>
+	</body>
 </html>
