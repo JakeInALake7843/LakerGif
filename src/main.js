@@ -15,9 +15,10 @@ InputField.addEventListener("drop", (e) => {
 	};
 });
 InputField.addEventListener("change", (e) => {
+	console.log(e);
 	e.preventDefault();
 	const reader = new FileReader();
-	reader.readAsDataURL(e.dataTransfer.files[0]);
+	reader.readAsDataURL(e.target.files[0]);
 	reader.onload = () => {
 		PreviewImage.src = reader.result;
 	};
