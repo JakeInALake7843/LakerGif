@@ -1,6 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
-import { convertFileSrc } from "@tauri-apps/api/core";
 
 const InputField = document.getElementById("ImageInput");
 const PreviewImage = document.getElementById("PreviewImage");
@@ -18,6 +17,7 @@ InputField.addEventListener("drop", (e) => {
 	reader.onload = () => {
 		PreviewImage.src = reader.result;
 	};
+	stage.removeWidget(stage.active);
 });
 InputField.addEventListener("change", (e) => {
 	console.log(e);
@@ -27,6 +27,7 @@ InputField.addEventListener("change", (e) => {
 	reader.onload = () => {
 		PreviewImage.src = reader.result;
 	};
+	stage.removeWidget(stage.active);
 });
 ProcessButton.onclick = (ev) => {
 	const img = new Image();
@@ -44,7 +45,8 @@ ProcessButton.onclick = (ev) => {
 await getCurrentWebview().onDragDropEvent(async (event) => {
 	if (event.payload.type === "drop") {
 		const filepath = event.payload.paths[0];
-		const newImage = convertFileSrc(filepath);
-		PreviewImage.src = newImage.src;
+		const output = await invoke("get_image_from_path", { name: filepath });
+		stage.removeWidget(stage.active);
+		PreviewImage.src = output;
 	}
 });
