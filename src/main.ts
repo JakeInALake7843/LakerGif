@@ -8,7 +8,14 @@ const Canvas = document.getElementById("Canvas")! as HTMLCanvasElement;
 const OutputImage = document.getElementById("OutputImage")! as HTMLImageElement;
 
 // @ts-ignore
-const stage = Jcrop.attach("PreviewImage");
+let stage = Jcrop.attach("PreviewImage");
+CreateStage();
+function CreateStage() {
+    stage.destroy();
+    // @ts-ignore
+    stage = Jcrop.attach("PreviewImage");
+
+}
 
 InputField.addEventListener("drop", (e) => {
 	console.log(e);
@@ -17,8 +24,8 @@ InputField.addEventListener("drop", (e) => {
 	reader.readAsDataURL(e.dataTransfer!.files[0]);
 	reader.onload = () => {
 		PreviewImage.src = reader.result as string;
-	};
-	stage.removeWidget(stage.active);
+    };
+    CreateStage();
 });
 InputField.addEventListener("change", (e) => {
 	console.log(e);
@@ -28,7 +35,7 @@ InputField.addEventListener("change", (e) => {
 	reader.onload = () => {
 		PreviewImage.src = reader.result as string;
 	};
-	stage.removeWidget(stage.active);
+	CreateStage();
 });
 ProcessButton.onclick = () => {
 	const img = new Image();
@@ -47,6 +54,7 @@ await getCurrentWebview().onDragDropEvent(async (event) => {
 	if (event.payload.type === "drop") {
 		const filepath = event.payload.paths[0];
         const output : string = await invoke("get_image_from_path", { name: filepath });
-		PreviewImage.src = output;
+        PreviewImage.src = output;
+        CreateStage();
 	}
 });
