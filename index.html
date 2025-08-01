@@ -13,15 +13,14 @@
 	<body>
 		<main class="container">
 			<h1>Welcome to Tauri</h1>
+			<p>Drag and drop an image here or browse to select one</p>
 
-			<input type="file" id="ImageInput" />
+			<input type="file" id="ImageInput" accept="image/*" />
 			<img id="PreviewImage" />
 			<button id="Process">do</button>
 			<canvas style="display: none" id="Canvas"></canvas>
 			<br />
 			<img id="OutputImage" />
 		</main>
-
-		<script src="/src/main.ts"></script>
 	</body>
 </html>
