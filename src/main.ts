@@ -7,6 +7,7 @@ const ProcessButton = document.getElementById("Process")! as HTMLButtonElement;
 const Canvas = document.getElementById("Canvas")! as HTMLCanvasElement;
 const OutputImage = document.getElementById("OutputImage")! as HTMLImageElement;
 
+// @ts-ignore
 const stage = Jcrop.attach("PreviewImage");
 
 InputField.addEventListener("drop", (e) => {
@@ -23,7 +24,7 @@ InputField.addEventListener("change", (e) => {
 	console.log(e);
 	e.preventDefault();
 	const reader = new FileReader();
-	reader.readAsDataURL(e.target!.files[0]);
+	reader.readAsDataURL(InputField.files![0]);
 	reader.onload = () => {
 		PreviewImage.src = reader.result as string;
 	};
