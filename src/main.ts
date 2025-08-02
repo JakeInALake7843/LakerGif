@@ -191,11 +191,23 @@ function CropPNG() {
     if (!validRect) return;
     const img = new Image();
     img.src = PreviewImage.src;
-	Canvas.width = Math.abs(w);
-	Canvas.height = Math.abs(h);
+    const nw = PreviewImage.naturalWidth;
+    const nh = PreviewImage.naturalHeight;
+    const dw = PreviewImage.getBoundingClientRect().width;
+    const dh = PreviewImage.getBoundingClientRect().height;
+    const sx = nw / dw;
+    const sy = nh / dh;
+
+    const gx = x * sx;
+    const gy = y * sy;
+    const gw = w * sx;
+    const gh = h * sy;
+
+	Canvas.width = Math.abs(gw);
+	Canvas.height = Math.abs(gh);
 	const ctx = Canvas.getContext("2d")!;
     
-	ctx.drawImage(img, -Math.min(x, x + w), -Math.min(y, y + h));
+	ctx.drawImage(img, -Math.min(gx, gx + gw), -Math.min(gy, gy + gh));
     
 	const output = Canvas.toDataURL("image/png");
     OutputImage.src = output;

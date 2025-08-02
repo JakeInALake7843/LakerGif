@@ -47,7 +47,7 @@
 			<br />
 			<p style="display: inline" id="ImagesLoaded">0 images loaded</p>
 			<button id="ClearImages">Clear</button>
-			<div id="CropContainer" style="position: relative">
+			<div id="CropContainer" style="position: relative; width: 80%">
 				<img id="PreviewImage" draggable="false" />
 				<div
 					id="CropSelection"
@@ -58,7 +58,7 @@
 						display: none;
 					"
 				></div>
-				<svg id="RectMask" style="display: none">
+				<svg id="RectMask" style="display: none" draggable="false">
 					<!-- Define mask -->
 					<mask id="invertedMask">
 						<!-- Fill entire area white to make everything visible -->
@@ -86,7 +86,7 @@
 			<canvas style="display: none" id="Canvas"></canvas>
 			<br />
 			<a href="" draggable="true" id="ImageLink" download="">
-				<img id="OutputImage" />
+				<img id="OutputImage" style="width: 80%" />
 			</a>
 		</div>
 	</body>
