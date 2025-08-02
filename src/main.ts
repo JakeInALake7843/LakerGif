@@ -1,16 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 
-import SelectionArea from "@simonwep/selection-js";
-
 //#region Variables
 let ImageName = "temp.png";
 
-const selection = new SelectionArea({
-    selectables: ['#PreviewImage'],
-    boundaries: ['#CropContainer'],
-    startareas: ['#CropContainer']
-});
 
 //#region Elements
 const InputField = document.getElementById("ImageInput")! as HTMLInputElement;
@@ -29,17 +22,6 @@ const OutputLink = document.getElementById("ImageLink")! as HTMLAnchorElement;
 
 function OnImageChange() {
 }
-selection.on('start', () => {
-    console.log('Selection started');
-});
-
-selection.on('move', ({store}) => {
-    console.log('Current rect:', store); // {left, top, width, height}
-});
-
-selection.on('stop', ({store}) => {
-    console.log('Final rect:', store);
-});
 
 function dataURItoBlob(data: string) {
     const byteString = atob(data.split(',')[1]);
