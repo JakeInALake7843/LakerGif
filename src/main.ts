@@ -4,15 +4,22 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 //#region Variables
 let ImageName = "temp.png";
 
+let CurrentMode = "CropPNG";
 
 //#region Elements
 const InputField = document.getElementById("ImageInput")! as HTMLInputElement;
 const PreviewImage = document.getElementById("PreviewImage")! as HTMLImageElement;
 const ProcessButton = document.getElementById("Process")! as HTMLButtonElement;
-const ToGifButton = document.getElementById("ToGif")! as HTMLButtonElement;
 const Canvas = document.getElementById("Canvas")! as HTMLCanvasElement;
 const OutputImage = document.getElementById("OutputImage")! as HTMLImageElement;
 const OutputLink = document.getElementById("ImageLink")! as HTMLAnchorElement;
+
+const _TempModeElements = document.getElementsByClassName("ModeSelector");
+const ModeElements: HTMLButtonElement[] = [];
+for (let i = 0; i < _TempModeElements.length; i++) {
+    ModeElements.push(_TempModeElements.item(i)! as HTMLButtonElement);
+    ModeElements[i].onclick = ChangeMode;
+}
 //#endregion
 
 //#endregion
@@ -24,12 +31,14 @@ let w = 0;
 let h = 0;
 let dragging = false;
 let validRect = true;
+let canDrag = false;
 const CropContainer = document.getElementById("CropContainer")! as HTMLDivElement;
 const CropRect = document.getElementById("CropSelection")! as HTMLDivElement;
 const CropMask = document.getElementById("CropMask")! as HTMLElement;
 const RectMask = document.getElementById("RectMask")! as HTMLDivElement;
 
 CropContainer.addEventListener("mousedown", (e) => {
+    if (!canDrag) return;
     dragging = true;
     x = e.offsetX;
     y = e.offsetY;
@@ -60,6 +69,7 @@ CropContainer.addEventListener("mousemove", (e) => {
     CropMask.setAttribute("height", Math.abs(h)+4 + 'px');
 });
 CropContainer.addEventListener("mouseup", () => {
+    if (!dragging) return;
     dragging = false;
     if (Math.abs(w) < 2 || Math.abs(h) < 2) {
         let rect = CropRect.style;
@@ -82,15 +92,36 @@ function resetCrop() {
     rect.width = "0px";
     rect.height = "0px";
     rect.display = "none";
+    RectMask.style.display = "none";
     validRect = false;
     return;
 }
 
-
-
 //#endregion
 
 //#region Functions
+
+function getModeElement(mode: string) {
+    return ModeElements.find((e) => e.id.replace("Mode_", "") == mode);
+}
+function ChangeMode(event: MouseEvent) {
+    const thisButton = event.target as HTMLButtonElement
+    CurrentMode = thisButton.id.replace("Mode_", "");
+    ModeElements.forEach((element) => {
+        element.classList.remove("Active");
+        if (element.id == thisButton.id) element.classList.add("Active"); 
+    })
+    OnModeChange();
+}
+
+function OnModeChange() {
+    canDrag = false;
+    switch (CurrentMode) {
+        case "CropPNG":
+            canDrag = true;
+            break;
+    }
+}
 
 function OnImageChange() {
     resetCrop();
@@ -109,6 +140,32 @@ function dataURItoBlob(data: string) {
     return new Blob([ab], { type: mime });
 }
 
+function CropPNG() {
+    if (!validRect) return;
+    const img = new Image();
+    img.src = PreviewImage.src;
+	Canvas.width = w;
+	Canvas.height = h;
+	const ctx = Canvas.getContext("2d")!;
+    
+	ctx.drawImage(img, -x, -y);
+    
+	const output = Canvas.toDataURL("image/png");
+    OutputImage.src = output;
+    OutputLink.href = output;
+    OutputLink.download = ImageName;
+}
+async function ConvertToGif() {
+    const gifOutput = await invoke("get_gif_from_image", { image: PreviewImage.src }) as string;
+    ImageName = ImageName.replace(".png", ".gif");
+    OutputImage.src = gifOutput;
+    OutputLink.href = gifOutput;
+    OutputLink.download = ImageName;
+}
+
+
+//#region Element Functions
+
 OutputLink.addEventListener("dragstart", (e) => {
     const imageBlob = dataURItoBlob(OutputImage.src);
     const file = new File([imageBlob], ImageName, { type: imageBlob.type });
@@ -117,7 +174,6 @@ OutputLink.addEventListener("dragstart", (e) => {
     e.dataTransfer?.items.add(file);
 })
 
-//#region Element Functions
 InputField.addEventListener("drop", (e) => {
     console.log(e);
 	e.preventDefault();
@@ -143,28 +199,15 @@ InputField.addEventListener("change", (e) => {
 });
 
 ProcessButton.onclick = () => {
-    if (!validRect) return;
-    const img = new Image();
-    img.src = PreviewImage.src;
-	Canvas.width = w;
-	Canvas.height = h;
-	const ctx = Canvas.getContext("2d")!;
-    
-	ctx.drawImage(img, -x, -y);
-    
-	const output = Canvas.toDataURL("image/png");
-    OutputImage.src = output;
-    OutputLink.href = output;
-    OutputLink.download = ImageName;
+    switch (CurrentMode) {
+        case "CropPNG":
+            CropPNG();
+            break;
+        case "PNGToGIF":
+            ConvertToGif();
+            break;
+    }
 };
-
-ToGifButton.onclick = async () => {
-    const gifOutput = await invoke("get_gif_from_image", { image: PreviewImage.src }) as string;
-    ImageName = ImageName.replace(".png", ".gif");
-    OutputImage.src = gifOutput;
-    OutputLink.href = gifOutput;
-    OutputLink.download = ImageName;
-}
 
 await getCurrentWebview().onDragDropEvent(async (event) => {
     if (event.payload.type === "drop") {

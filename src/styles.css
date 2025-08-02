@@ -73,17 +73,22 @@
     pointer-events: none;
     /* allows mouse events to pass through */
 }
-input, button {
+
+.ModeSelector {
+    all: initial;
+    background-color: var(--Container_AccentPrimary);
+    border-radius: 5px;
+    padding:5px;
+    font:inherit;
+    border: 2px solid var(--Container_AccentDark);
+    color: lightblue;
+    transition: background-color 0.5s ease;
+}
+
+.ModeSelector.Active {
+    background-color: var(--Container_AccentLight);
 }
 
 button {
   cursor: pointer;
-}
-
-button:hover {
-}
-button:active {
-}
-
-input, button {
 }

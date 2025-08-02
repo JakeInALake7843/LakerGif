@@ -10,6 +10,25 @@
 
 	<body>
 		<h1>LkGIF</h1>
+		<h2 style="text-align: center">Modes:</h2>
+		<div
+			style="
+				display: flex;
+				flex-direction: row;
+				justify-content: center;
+				align-content: center;
+				gap: 20px;
+			"
+		>
+			<button class="ModeSelector Active" id="Mode_CropPNG">
+				Crop PNG
+			</button>
+			<button class="ModeSelector" id="Mode_PNGToGIF">PNG to GIF</button>
+			<button class="ModeSelector" id="Mode_FramesToGIF">
+				Frames to GIF
+			</button>
+		</div>
+		<br />
 		<div class="container-nofile">
 			<p>Upload, paste, or drag and drop a file here:</p>
 			<div class="dropzone">
@@ -62,8 +81,7 @@
 					/>
 				</svg>
 			</div>
-			<button id="Process">Crop Image</button>
-			<button id="ToGif">To Gif</button>
+			<button id="Process">Process</button>
 			<canvas style="display: none" id="Canvas"></canvas>
 			<br />
 			<a href="" draggable="true" id="ImageLink" download="">
