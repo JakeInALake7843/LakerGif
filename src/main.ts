@@ -1,30 +1,45 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 
+import SelectionArea from "@simonwep/selection-js";
+
 //#region Variables
 let ImageName = "temp.png";
 
+const selection = new SelectionArea({
+    selectables: ['#PreviewImage'],
+    boundaries: ['#CropContainer'],
+    startareas: ['#CropContainer']
+});
+
 //#region Elements
 const InputField = document.getElementById("ImageInput")! as HTMLInputElement;
+const CropContainer = document.getElementById("CropContainer")! as HTMLDivElement;
 const PreviewImage = document.getElementById("PreviewImage")! as HTMLImageElement;
 const ProcessButton = document.getElementById("Process")! as HTMLButtonElement;
 const ToGifButton = document.getElementById("ToGif")! as HTMLButtonElement;
 const Canvas = document.getElementById("Canvas")! as HTMLCanvasElement;
 const OutputImage = document.getElementById("OutputImage")! as HTMLImageElement;
+const OutputLink = document.getElementById("ImageLink")! as HTMLAnchorElement;
 //#endregion
-
-// @ts-ignore // throws an error due to being imported in html
-let stage = Jcrop.attach("PreviewImage");
 
 //#endregion
 
 //#region Functions
 
-function CreateStage() {
-    stage.destroy();
-    // @ts-ignore
-    stage = Jcrop.attach("PreviewImage");
+function OnImageChange() {
 }
+selection.on('start', () => {
+    console.log('Selection started');
+});
+
+selection.on('move', ({store}) => {
+    console.log('Current rect:', store); // {left, top, width, height}
+});
+
+selection.on('stop', ({store}) => {
+    console.log('Final rect:', store);
+});
 
 function dataURItoBlob(data: string) {
     const byteString = atob(data.split(',')[1]);
@@ -37,11 +52,11 @@ function dataURItoBlob(data: string) {
     return new Blob([ab], { type: mime });
 }
 
-OutputImage.addEventListener("dragstart", (e) => {
+OutputLink.addEventListener("dragstart", (e) => {
     const imageBlob = dataURItoBlob(OutputImage.src);
-    const file = new File([imageBlob], ImageName, { type: ImageName.endsWith(".gif") ? "image/gif" : "image/png" });
+    const file = new File([imageBlob], ImageName, { type: imageBlob.type });
     e.dataTransfer?.clearData();
-    e.dataTransfer?.setDragImage(OutputImage, 0, 0);
+    e.dataTransfer?.setDragImage(OutputImage, e.offsetX, e.offsetY);
     e.dataTransfer?.items.add(file);
 })
 
@@ -55,7 +70,7 @@ InputField.addEventListener("drop", (e) => {
         ImageName = e.dataTransfer!.files[0].name;
         PreviewImage.src = reader.result as string;
     };
-    CreateStage();
+    OnImageChange();
 });
 
 InputField.addEventListener("change", (e) => {
@@ -66,40 +81,48 @@ InputField.addEventListener("change", (e) => {
 	reader.onload = () => {
         ImageName = InputField.files![0].name;
         PreviewImage.src = reader.result as string;
-	};
-	CreateStage();
+    };
+    OnImageChange();
 });
 
 ProcessButton.onclick = () => {
     const img = new Image();
-	img.src = PreviewImage.src;
-	Canvas.width = stage.active.pos.w;
-	Canvas.height = stage.active.pos.h;
+    img.src = PreviewImage.src;
+    const selection = { x: 0, y: 0, width: 0, height: 0 };
+	Canvas.width = selection!.width;
+	Canvas.height = selection.height;
 	const ctx = Canvas.getContext("2d")!;
     
-	ctx.drawImage(img, -stage.active.pos.x, -stage.active.pos.y);
+	ctx.drawImage(img, -selection.x, -selection.y);
     
 	const output = Canvas.toDataURL("image/png");
-	OutputImage.src = output;
+    OutputImage.src = output;
+    OutputLink.href = output;
+    OutputLink.download = ImageName;
 };
 
 ToGifButton.onclick = async () => {
-    const gifOutput = await invoke("get_gif_from_image", { image: PreviewImage.src });
-    OutputImage.src = gifOutput as string;
+    const gifOutput = await invoke("get_gif_from_image", { image: PreviewImage.src }) as string;
+    ImageName = ImageName.replace(".png", ".gif");
+    OutputImage.src = gifOutput;
+    OutputLink.href = gifOutput;
+    OutputLink.download = ImageName;
 }
 
 await getCurrentWebview().onDragDropEvent(async (event) => {
     if (event.payload.type === "drop") {
+        if (event.payload.paths.length == 0) return;
         const filepath = event.payload.paths[0];
-        const lastSeperator = filepath.lastIndexOf('/');
-        ImageName = filepath.slice(lastSeperator);
+        const lastSeperator = filepath.lastIndexOf('\\');
+        ImageName = filepath.slice(lastSeperator+1);
         const output : string = await invoke("get_image_from_path", { name: filepath });
         PreviewImage.src = output;
-        CreateStage();
+        OnImageChange();
 	}
 });
 //#endregion
 
 //#endregion
 
-CreateStage();
+// init
+OnImageChange();

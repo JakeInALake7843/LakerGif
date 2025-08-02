@@ -6,8 +6,6 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Tauri App</title>
 		<script type="module" src="/src/main.ts" defer></script>
-		<link rel="stylesheet" href="https://unpkg.com/jcrop/dist/jcrop.css" />
-		<script src="https://unpkg.com/jcrop"></script>
 	</head>
 
 	<body>
@@ -23,12 +21,16 @@
 			<br />
 
 			<input type="file" id="ImageInput" accept="image/*" />
-			<img id="PreviewImage" />
+			<div id="CropContainer">
+				<img id="PreviewImage" draggable="false" />
+			</div>
 			<button id="Process">Crop Image</button>
 			<button id="ToGif">To Gif</button>
 			<canvas style="display: none" id="Canvas"></canvas>
 			<br />
-			<img id="OutputImage" />
+			<a href="" draggable="true" id="ImageLink" download="">
+				<img id="OutputImage" />
+			</a>
 		</div>
 	</body>
 </html>
