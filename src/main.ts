@@ -6,8 +6,12 @@ let ImageName = "temp.png";
 
 let CurrentMode = "CropPNG";
 
+let ImageDataList : string[] = [];
+
 //#region Elements
 const InputField = document.getElementById("ImageInput")! as HTMLInputElement;
+const LoadedImageText = document.getElementById("ImagesLoaded")! as HTMLParagraphElement;
+const ClearButton = document.getElementById("ClearImages")! as HTMLButtonElement;
 const PreviewImage = document.getElementById("PreviewImage")! as HTMLImageElement;
 const ProcessButton = document.getElementById("Process")! as HTMLButtonElement;
 const Canvas = document.getElementById("Canvas")! as HTMLCanvasElement;
@@ -162,12 +166,14 @@ function OnModeChange() {
             canDrag = true;
             break;
     }
+    CropContainer.style.display = canDrag ? "block" : "none";
 }
 
 function OnImageChange() {
     resetCrop();
     CropContainer.style.width = `${PreviewImage.width}px`;
     CropContainer.style.width = `${PreviewImage.width}px`;
+    LoadedImageText.textContent = `${ImageDataList.length} Image${ImageDataList.length == 1 ? "" : "s"} loaded`
 }
 
 function dataURItoBlob(data: string) {
@@ -203,7 +209,13 @@ async function ConvertToGif() {
     OutputLink.href = gifOutput;
     OutputLink.download = ImageName;
 }
-
+async function FramesToGif() {
+    const gifOutput = await invoke("get_gif_from_frames", { frames: ImageDataList.join("`") }) as string;
+    ImageName = ImageName.replace(".png", ".gif");
+    OutputImage.src = gifOutput;
+    OutputLink.href = gifOutput;
+    OutputLink.download = ImageName;
+}
 
 //#region Element Functions
 
@@ -218,24 +230,32 @@ OutputLink.addEventListener("dragstart", (e) => {
 InputField.addEventListener("drop", (e) => {
     console.log(e);
 	e.preventDefault();
-	const reader = new FileReader();
-	reader.readAsDataURL(e.dataTransfer!.files[0]);
-    reader.onload = () => {
-        ImageName = e.dataTransfer!.files[0].name;
-        PreviewImage.src = reader.result as string;
-    };
+    ImageName = e.dataTransfer!.files[0].name;
+    ImageDataList = [];
+    for (let i = 0; i < e.dataTransfer!.files.length; i++) {
+        const reader = new FileReader();
+        reader.readAsDataURL(e.dataTransfer!.files[i]);
+        reader.onload = () => {
+            if (i == 0) PreviewImage.src = reader.result as string;
+            ImageDataList.push(reader.result as string);
+        };
+    }
     OnImageChange();
 });
 
 InputField.addEventListener("change", (e) => {
     console.log(e);
 	e.preventDefault();
-	const reader = new FileReader();
-	reader.readAsDataURL(InputField.files![0]);
-	reader.onload = () => {
-        ImageName = InputField.files![0].name;
-        PreviewImage.src = reader.result as string;
-    };
+    ImageName = InputField.files![0].name;
+    ImageDataList = [];
+    for (let i = 0; i < InputField.files!.length; i++) {
+        const reader = new FileReader();
+        reader.readAsDataURL(InputField.files![0]);
+        reader.onload = () => {
+            if (i == 0) PreviewImage.src = reader.result as string;
+            ImageDataList.push(reader.result as string);
+        };
+    }
     OnImageChange();
 });
 
@@ -247,17 +267,30 @@ ProcessButton.onclick = () => {
         case "PNGToGIF":
             ConvertToGif();
             break;
+        case "FramesToGIF":
+            FramesToGif();
+            break;
     }
 };
+
+ClearButton.onclick = () => {
+    ImageDataList = [];
+    PreviewImage.src = "";
+    OnImageChange();
+}
 
 await getCurrentWebview().onDragDropEvent(async (event) => {
     if (event.payload.type === "drop") {
         if (event.payload.paths.length == 0) return;
-        const filepath = event.payload.paths[0];
-        const lastSeperator = filepath.lastIndexOf('\\');
-        ImageName = filepath.slice(lastSeperator+1);
-        const output : string = await invoke("get_image_from_path", { name: filepath });
-        PreviewImage.src = output;
+        ImageDataList = [];
+        for (let i = 0; i < event.payload.paths.length; i++) {
+            const filepath = event.payload.paths[i];
+            const lastSeperator = filepath.lastIndexOf('\\');
+            if (i == 0) ImageName = filepath.slice(lastSeperator+1);
+            const output : string = await invoke("get_image_from_path", { name: filepath });
+            if (i == 0) PreviewImage.src = output;
+            ImageDataList.push(output);
+        }
         OnImageChange();
 	}
 });
