@@ -7,7 +7,6 @@ let ImageName = "temp.png";
 
 //#region Elements
 const InputField = document.getElementById("ImageInput")! as HTMLInputElement;
-const CropContainer = document.getElementById("CropContainer")! as HTMLDivElement;
 const PreviewImage = document.getElementById("PreviewImage")! as HTMLImageElement;
 const ProcessButton = document.getElementById("Process")! as HTMLButtonElement;
 const ToGifButton = document.getElementById("ToGif")! as HTMLButtonElement;
@@ -18,9 +17,85 @@ const OutputLink = document.getElementById("ImageLink")! as HTMLAnchorElement;
 
 //#endregion
 
+//#region CROPPING LOGIC
+let x = 0;
+let y = 0;
+let w = 0;
+let h = 0;
+let dragging = false;
+let validRect = true;
+const CropContainer = document.getElementById("CropContainer")! as HTMLDivElement;
+const CropRect = document.getElementById("CropSelection")! as HTMLDivElement;
+const CropMask = document.getElementById("CropMask")! as HTMLElement;
+const RectMask = document.getElementById("RectMask")! as HTMLDivElement;
+
+CropContainer.addEventListener("mousedown", (e) => {
+    dragging = true;
+    x = e.offsetX;
+    y = e.offsetY;
+    w = 0;
+    h = 0;
+    let rect = CropRect.style;
+    rect.left = `${x}px`;
+    rect.top = `${y}px`;
+    rect.width = `${w}px`;
+    rect.height = `${h}px`;
+    rect.display = "block";
+    RectMask.style.display = "block";
+});
+CropContainer.addEventListener("mousemove", (e) => {
+    if (e.buttons != 1) return;
+    if (!dragging) return;
+    w = e.offsetX - x;
+    h = e.offsetY - y;
+    let rect = CropRect.style;
+    rect.left = (w < 0 ? e.offsetX : x) + 'px';
+    rect.top = (h < 0 ? e.offsetY : y) + 'px';
+    rect.width = Math.abs(w) + 'px';
+    rect.height = Math.abs(h) + 'px';
+
+    CropMask.setAttribute("x", (w < 0 ? e.offsetX : x) + 'px');
+    CropMask.setAttribute("y", (h < 0 ? e.offsetY : y) + 'px');
+    CropMask.setAttribute("width", Math.abs(w)+4 + 'px');
+    CropMask.setAttribute("height", Math.abs(h)+4 + 'px');
+});
+CropContainer.addEventListener("mouseup", () => {
+    dragging = false;
+    if (Math.abs(w) < 2 || Math.abs(h) < 2) {
+        let rect = CropRect.style;
+        rect.x = "0px";
+        rect.y = "0px";
+        rect.width = "0px";
+        rect.height = "0px";
+        rect.display = "none";
+        RectMask.style.display = "none";
+        validRect = false;
+        return;
+    }
+    validRect = true;
+})
+
+function resetCrop() {
+    let rect = CropRect.style;
+    rect.x = "0px";
+    rect.y = "0px";
+    rect.width = "0px";
+    rect.height = "0px";
+    rect.display = "none";
+    validRect = false;
+    return;
+}
+
+
+
+//#endregion
+
 //#region Functions
 
 function OnImageChange() {
+    resetCrop();
+    CropContainer.style.width = `${PreviewImage.width}px`;
+    CropContainer.style.width = `${PreviewImage.width}px`;
 }
 
 function dataURItoBlob(data: string) {
@@ -68,14 +143,14 @@ InputField.addEventListener("change", (e) => {
 });
 
 ProcessButton.onclick = () => {
+    if (!validRect) return;
     const img = new Image();
     img.src = PreviewImage.src;
-    const selection = { x: 0, y: 0, width: 0, height: 0 };
-	Canvas.width = selection!.width;
-	Canvas.height = selection.height;
+	Canvas.width = w;
+	Canvas.height = h;
 	const ctx = Canvas.getContext("2d")!;
     
-	ctx.drawImage(img, -selection.x, -selection.y);
+	ctx.drawImage(img, -x, -y);
     
 	const output = Canvas.toDataURL("image/png");
     OutputImage.src = output;

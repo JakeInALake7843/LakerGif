@@ -12,7 +12,14 @@
 		<h1>LkGIF</h1>
 		<div class="container-nofile">
 			<p>Upload, paste, or drag and drop a file here:</p>
-			<div class="dropzone"></div>
+			<div class="dropzone">
+				<input
+					type="file"
+					id="ImageInput"
+					accept="image/*"
+					style="top: 40%; left: 20px; position: relative"
+				/>
+			</div>
 
 			<p>Or enter direct URL:</p>
 			<input class="linkzone" placeholder="https://" />
@@ -20,10 +27,40 @@
 			<br />
 			<br />
 
-			<input type="file" id="ImageInput" accept="image/*" />
-			<div id="CropContainer">
+			<div id="CropContainer" style="position: relative">
 				<img id="PreviewImage" draggable="false" />
-				<div id="CropSelection"></div>
+				<div
+					id="CropSelection"
+					style="
+						position: absolute;
+						border: 2px dashed black;
+						pointer-events: none;
+						display: none;
+					"
+				></div>
+				<svg id="RectMask" style="display: none">
+					<!-- Define mask -->
+					<mask id="invertedMask">
+						<!-- Fill entire area white to make everything visible -->
+						<rect width="100%" height="100%" fill="white" />
+						<!-- The area you want to "cut out" is black -->
+						<rect
+							x="0"
+							y="0"
+							width="0"
+							height="0"
+							fill="black"
+							id="CropMask"
+						/>
+					</mask>
+					<!-- Image or shape with the mask applied -->
+					<rect
+						width="100%"
+						height="100%"
+						fill="#0005"
+						mask="url(#invertedMask)"
+					/>
+				</svg>
 			</div>
 			<button id="Process">Crop Image</button>
 			<button id="ToGif">To Gif</button>
