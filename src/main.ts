@@ -31,14 +31,35 @@ let w = 0;
 let h = 0;
 let dragging = false;
 let validRect = true;
-let canDrag = false;
+let canDrag = true;
+let changingRect = false;
 const CropContainer = document.getElementById("CropContainer")! as HTMLDivElement;
 const CropRect = document.getElementById("CropSelection")! as HTMLDivElement;
 const CropMask = document.getElementById("CropMask")! as HTMLElement;
 const RectMask = document.getElementById("RectMask")! as HTMLDivElement;
+const GrabbingSides = { left: false, right: false, top: false, bottom: false };
+let lastOffsetX = 0;
+let lastOffsetY = 0;
 
 CropContainer.addEventListener("mousedown", (e) => {
     if (!canDrag) return;
+    if (validRect) {
+        const GrabThreshold = 8;
+        //we might be trying to grab a corner/edge. check if that is the case.
+        GrabbingSides.left = Math.abs(e.offsetX - x) < GrabThreshold;
+        GrabbingSides.right = Math.abs(e.offsetX - x - w) < GrabThreshold;
+        GrabbingSides.top = Math.abs(e.offsetY - y) < GrabThreshold;
+        GrabbingSides.bottom = Math.abs(e.offsetY - y - h) < GrabThreshold;
+
+        if (GrabbingSides.left || GrabbingSides.right || GrabbingSides.top || GrabbingSides.bottom) {
+            changingRect = true;
+            dragging = true;
+            lastOffsetX = e.offsetX;
+            lastOffsetY = e.offsetY;
+            return;
+        }
+    }
+    changingRect = false;
     dragging = true;
     x = e.offsetX;
     y = e.offsetY;
@@ -51,12 +72,34 @@ CropContainer.addEventListener("mousedown", (e) => {
     rect.height = `${h}px`;
     rect.display = "block";
     RectMask.style.display = "block";
+    CropMask.setAttribute("x", x + 'px');
+    CropMask.setAttribute("y", y + 'px');
+    CropMask.setAttribute("width", 4 + 'px');
+    CropMask.setAttribute("height", 4 + 'px');
 });
 CropContainer.addEventListener("mousemove", (e) => {
     if (e.buttons != 1) return;
     if (!dragging) return;
-    w = e.offsetX - x;
-    h = e.offsetY - y;
+    if (changingRect) {
+        const deltaX = e.offsetX - lastOffsetX;
+        const deltaY = e.offsetY - lastOffsetY;
+        if (GrabbingSides.bottom) h += deltaY;
+        if (GrabbingSides.top) {
+            y += deltaY;
+            h -= deltaY;
+        }
+        if (GrabbingSides.right) w += deltaX;
+        if (GrabbingSides.left) {
+            x += deltaX;
+            w -= deltaX;
+        }
+        lastOffsetX = e.offsetX;
+        lastOffsetY = e.offsetY;
+    }
+    else {
+        w = e.offsetX - x;
+        h = e.offsetY - y;
+    }
     let rect = CropRect.style;
     rect.left = (w < 0 ? e.offsetX : x) + 'px';
     rect.top = (h < 0 ? e.offsetY : y) + 'px';
@@ -65,8 +108,8 @@ CropContainer.addEventListener("mousemove", (e) => {
 
     CropMask.setAttribute("x", (w < 0 ? e.offsetX : x) + 'px');
     CropMask.setAttribute("y", (h < 0 ? e.offsetY : y) + 'px');
-    CropMask.setAttribute("width", Math.abs(w)+4 + 'px');
-    CropMask.setAttribute("height", Math.abs(h)+4 + 'px');
+    CropMask.setAttribute("width", Math.abs(w) + 4 + 'px');
+    CropMask.setAttribute("height", Math.abs(h) + 4 + 'px');
 });
 CropContainer.addEventListener("mouseup", () => {
     if (!dragging) return;
@@ -101,9 +144,6 @@ function resetCrop() {
 
 //#region Functions
 
-function getModeElement(mode: string) {
-    return ModeElements.find((e) => e.id.replace("Mode_", "") == mode);
-}
 function ChangeMode(event: MouseEvent) {
     const thisButton = event.target as HTMLButtonElement
     CurrentMode = thisButton.id.replace("Mode_", "");
@@ -115,6 +155,7 @@ function ChangeMode(event: MouseEvent) {
 }
 
 function OnModeChange() {
+    resetCrop();
     canDrag = false;
     switch (CurrentMode) {
         case "CropPNG":
@@ -144,11 +185,11 @@ function CropPNG() {
     if (!validRect) return;
     const img = new Image();
     img.src = PreviewImage.src;
-	Canvas.width = w;
-	Canvas.height = h;
+	Canvas.width = Math.abs(w);
+	Canvas.height = Math.abs(h);
 	const ctx = Canvas.getContext("2d")!;
     
-	ctx.drawImage(img, -x, -y);
+	ctx.drawImage(img, -Math.min(x, x + w), -Math.min(y, y + h));
     
 	const output = Canvas.toDataURL("image/png");
     OutputImage.src = output;
